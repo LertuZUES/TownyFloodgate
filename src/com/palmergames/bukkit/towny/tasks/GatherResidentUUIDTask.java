@@ -24,7 +24,7 @@ public class GatherResidentUUIDTask implements Runnable {
 	@SuppressWarnings("unused")
 	private Towny plugin;
 	private final static Queue<Resident> queue = new ConcurrentLinkedQueue<>();
-	private static boolean offlineModeDetected = false;
+	private static boolean offlineModeDetected = true;
 
 	/**
 	 * @param plugin reference to Towny
@@ -55,7 +55,7 @@ public class GatherResidentUUIDTask implements Runnable {
 		UUID uuid = BukkitTools.getUUIDSafely(resident.getName()); // Get a UUID from the server's playercache without calling to Mojang. 
 
 		if (uuid != null) { // The player has been online recently enough to be in the cache.
-			if (!offlineModeDetected && uuid.version() == 3) // True offline servers return a v3 UUID instead of v4.
+			if (!offlineModeDetected && uuid.version() == 4) // True offline servers return a v3 UUID instead of v4.
 				offlineModeDetected = true;
 			
 			applyUUID(resident, uuid, "cache"); 
