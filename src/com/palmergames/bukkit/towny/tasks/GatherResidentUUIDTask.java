@@ -42,13 +42,6 @@ public class GatherResidentUUIDTask implements Runnable {
 			return;
 		}
 		Resident resident = queue.poll();
-		if (resident.hasUUID()) {
-			// We already have the UUID but we can still test if server is in offline mode. 
-			if (!offlineModeDetected && resident.getUUID().version() == 3) // True offline servers return a v3 UUID instead of v4.
-				offlineModeDetected = true;
-			
-			return;
-		}
 		if (resident.isNPC()) // This is one of our own NPC residents, lets give them a UUID if they don't already have one.
 			applyUUID(resident, UUID.randomUUID(), "Towny");
 		
@@ -61,25 +54,7 @@ public class GatherResidentUUIDTask implements Runnable {
 			applyUUID(resident, uuid, "cache"); 
 
 		} else if (!offlineModeDetected) { // If the server is in true offline mode the following test would result always return 204, wiping the database.
-			try {
-				uuid = BukkitTools.getUUIDFromResident(resident); // This will call mojang for the player's UUID.
-			} catch (MojangException e) {
-				// 204 is thrown when the player account no longer exists, they will not be logging in again so they can be deleted.
-				TownyMessaging.sendErrorMsg("HTTP Response Code 204 - Mojang says " + resident.getName() + " no longer has an account, this could be in error. Unable to gather UUID.");
-				return;	
-			} catch (IOException e) {
-				TownyMessaging.sendErrorMsg("Resident: " + resident.getName() + " caused an IOException in the GatheringResidentUUID task. Unable to gather UUID.");
-				return;
-			}
-			if (uuid != null)
-				applyUUID(resident, uuid, "Mojang");
-			else {
-				// The mojang API could not be reached so lets just shut down the task for a minute.
-				TownyMessaging.sendDebugMsg("Could not resolve UUID for resident: " + resident.getName() + ", sorry! Gather task will try again in a minute.");
-				queue.add(resident);
-				TownyTimerHandler.toggleGatherResidentUUIDTask(false);
-				TownyTimerHandler.toggleGatherResidentUUIDTask(true);
-			}			
+			applyUUID(resident, uuid, "cache"); 			
 		}
 	}
 	
